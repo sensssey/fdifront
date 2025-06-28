@@ -4,9 +4,7 @@ import Login from "./components/auth/login";
 import Register from "./components/auth/register";
 import PostsPage from "./pages/PostPage";
 import ProtectedRoutes from "./utils/ProtectedRoutes";
-import Profile from "./components/profile/profile";
-import AvatarDisplay from "./components/profile/profile";
-import AvatarManager from "./components/profile/profile";
+import ProfilePage from "./components/profile/profile";
 
 function App() {
     return (
@@ -18,7 +16,7 @@ function App() {
             <Route path="register" element={<Register />} />
             <Route element={<ProtectedRoutes />}>
               <Route path="posts" element={<PostsPage />} />
-              <Route path="profile" element={<AvatarManager />} />
+              <Route path="profile" element={<ProfilePage/>} />
             </Route>
           </Route>
         </Routes>

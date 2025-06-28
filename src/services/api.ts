@@ -1,12 +1,14 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
+// Создаем экземпляр axios для API-запросов
 export const apiClient = axios.create({
-  baseURL: "http://localhost:8000", 
+  baseURL: "http://localhost:8000",
 });
 
+// Добавляем токен авторизации к каждому запросу
 apiClient.interceptors.request.use((config) => {
-  const token = Cookies.get("token"); 
+  const token = Cookies.get("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -15,8 +17,7 @@ apiClient.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-
-
+// === Аутентификация ===
 export const apiLogin = async (username: string, password: string): Promise<string> => {
   try {
     const formData = new FormData();
@@ -37,29 +38,36 @@ export const apiLogin = async (username: string, password: string): Promise<stri
   }
 };
 
-
-export const apiRegister = async (username: string,  password: string) => {
+export const apiRegister = async (username: string, password: string): Promise<{token: string}> => {
   try {
     const response = await apiClient.post("/auth/register", {
       username,
       password,
     });
-    return response.data; 
-  } 
-  catch (error: any) {
+    if (!response.data.access_token) {
+      throw new Error("No access token received");
+    }
+    
+    return {
+      token: response.data.access_token
+    };
+  } catch (error: any) {
     if (error.response?.data?.detail) {
+      if (typeof error.response.data.detail === 'string') {
+        throw new Error(error.response.data.detail);
+      }
       const errors = error.response.data.detail;
       for (const err of errors) {
-        if (err.loc.includes("email") && err.type === "value_error") {
-          throw new Error("Invalid email");
+        if (err.loc && err.type === "value_error") {
+          throw new Error("Validation error: " + err.msg);
         }
       }
     }
-    throw new Error("Registration failed");
+    throw new Error(error.message || "Registration failed");
   }
 };
 
-
+// === Посты ===
 export const fetchPosts = () => apiClient.get("/posts/");
 
 interface CreatePostData {
@@ -70,7 +78,7 @@ interface CreatePostData {
 export const createPost = async (data: CreatePostData) => {
   try {
     const response = await apiClient.post("/posts/", data);
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Ошибка при создании поста:", error);
     throw error;
@@ -96,44 +104,48 @@ export const deletePost = async (postId: number) => {
   }
 };
 
-// types.ts (создайте новый файл для типов)
-export interface AvatarResponse {
-  message?: string;
-  error?: string;
-}
-
-// apiClient.ts
-export const uploadAvatar = async (file: File): Promise<AvatarResponse> => {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  try {
-    const response = await apiClient.post("/users/avatar", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.detail || "Failed to upload avatar");
-  }
-};
-
-export const getAvatar = async (): Promise<Blob> => {
+// === Аватар ===
+export const getAvatar = async (): Promise<Blob | null> => {
   try {
     const response = await apiClient.get("/users/avatar", {
       responseType: "blob",
     });
+
+    if (response.data.size === 0) {
+      throw new Error("Server returned empty avatar");
+    }
+
     return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.detail || "Avatar not found");
+  } catch (err) {
+    console.error("Failed to fetch avatar", err);
+    return null;
   }
 };
 
-export const deleteAvatar = async (): Promise<void> => {
+export const uploadAvatar = async (file: File): Promise<boolean> => {
   try {
-    await apiClient.delete("/users/avatar");
-  } catch (error: any) {
-    throw new Error(error.response?.data?.detail || "Failed to delete avatar");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await apiClient.post("/users/avatar", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return true;
+  } catch (err) {
+    console.error("Failed to upload avatar", err);
+    return false;
   }
 };
+
+export const deleteAvatar = async () => {
+  try {
+    await apiClient.delete('/users/avatar');
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    throw error;
+  }
+}
+

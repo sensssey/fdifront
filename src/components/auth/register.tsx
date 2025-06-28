@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import { apiRegister } from "../../services/api";
+import { apiClient, apiRegister } from "../../services/api";
 
 const Register = () => {
   const [username, setUsername] = useState("");
@@ -12,13 +12,15 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
+  
     try {
-      const token = await apiRegister(username, password); // Регистрируем пользователя
-      Cookies.set("token", token, { expires: 7 }); // Сохраняем токен в cookies на 7 дней
-      navigate("/posts"); // Переходим на страницу постов
+      const { token } = await apiRegister(username, password);
+      Cookies.set("token", token, { expires: 7 });
+      apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      navigate("/posts");
+
     } catch (err: any) {
-      setError(err.message || "Registration failed"); // Показываем ошибку
+      setError(err.message);
     }
   };
 
