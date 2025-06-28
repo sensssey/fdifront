@@ -72,28 +72,27 @@ const PostsPage = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center border-b border-black pb-2">
-        <h1 className="text-2xl font-bold ml-3">wwBlog</h1>
-        <div className="flex items-center space-x-4 mr-3">
-          <Link to="/Profile" className="flex items-center justify-center">
-            {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="User avatar"
-                  className="w-16 h-16 rounded-full"
-                  onError={() => setError('Failed to display avatar')}
-                />
-              ) : (
-              <img
-                src="https://static.thenounproject.com/png/1476975-200.png "
-                alt="Default avatar"
-                className="w-10 h-12 pt-1.5 rounded-full"
-              />
-            )}
-          </Link>
-          <LogoutButton/>
-        </div>
+      <div className="flex justify-between items-center border-b border-black pb-2.5 h-18">
+      <h1 className="text-2xl font-bold ml-3">wwBlog</h1>
+      <div className="flex items-center space-x-4 mr-3">
+        <Link to="/Profile" className="flex items-center">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="User avatar"
+              className="w-10 h-10 mt-2 rounded-full"
+            />
+          ) : (
+            <img
+              src="https://static.thenounproject.com/png/1476975-200.png "
+              alt="Default avatar"
+              className="w-10 h-10 mt-2 rounded-full"
+            />
+          )}
+        </Link>
+        <LogoutButton/>
       </div>
+    </div>
       <div className="p-5">
         <PostList
           posts={posts}

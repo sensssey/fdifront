@@ -67,8 +67,25 @@ export const apiRegister = async (username: string, password: string): Promise<{
   }
 };
 
+export interface UserData {
+  user_id: number;
+  username: string;
+  avatar?: string;
+}
+
+export const fetch_information = async (): Promise<UserData> => {
+  try{
+      const response = await apiClient.get("auth/users/me")
+      return response.data;
+  }
+  catch(error){
+    throw new Error("Failed to fetch userdata");
+  }
+}
+
+
 // === Посты ===
-export const fetchPosts = () => apiClient.get("/posts/");
+export const fetchPosts = async () => apiClient.get("/posts/");
 
 interface CreatePostData {
   title: string;
